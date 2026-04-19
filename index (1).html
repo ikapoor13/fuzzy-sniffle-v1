@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>my space</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F4EF; --bg2: #EFEBE3; --bg3: #E8E2D9;
+    --ink: #1C1917; --ink2: #57534E; --ink3: #A8A29E;
+    --accent-spirit: #2D6A4F; --accent-todo: #1E3A5F;
+    --accent-about: #5B3A8A; --accent-rel: #8A3A5B;
+    --accent-revisit: #8A5B00; --accent-tv: #3A5B8A; --accent-obs: #5B6B3A;
+    --border: rgba(28,25,23,0.1); --border2: rgba(28,25,23,0.06);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-weight: 300; }
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto; transition: transform 0.3s ease; }
+  .sidebar-logo { padding: 28px 20px 20px; font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); border-bottom: 1px solid var(--border2); font-style: italic; }
+  .sidebar-logo span { display: block; font-size: 11px; font-family: 'DM Sans', sans-serif; font-style: normal; color: var(--ink3); margin-top: 3px; font-weight: 400; letter-spacing: 0.05em; }
+  .nav { padding: 16px 0; flex: 1; }
+  .nav-section-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); padding: 12px 20px 4px; font-weight: 500; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: var(--ink2); cursor: pointer; transition: all 0.15s; font-weight: 400; border-left: 2px solid transparent; }
+  .nav-item:hover, .nav-item.active { color: var(--ink); background: var(--bg3); }
+  .nav-item.active { font-weight: 500; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .topbar { position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--border2); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-style: italic; }
+  .topbar-date { font-size: 12px; color: var(--ink3); }
+  .page { padding: 32px; max-width: 900px; animation: fadein 0.3s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 12px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-style: italic; }
+  .overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .metric-card { background: var(--bg2); border-radius: var(--radius-sm); padding: 16px 20px; }
+  .metric-label { font-size: 11px; color: var(--ink3); margin-bottom: 6px; letter-spacing: 0.04em; }
+  .metric-val { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; display: block; font-weight: 500; }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 14px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; font-weight: 300; outline: none; transition: border 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--ink2); }
+  .form-textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn { padding: 10px 20px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; border: 1px solid var(--border); }
+  .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn-primary:hover { background: var(--ink2); }
+  .btn-ghost { background: transparent; color: var(--ink2); }
+  .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .entry { border-bottom: 1px solid var(--border2); padding: 16px 0; }
+  .entry:last-child { border-bottom: none; }
+  .entry-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .entry-cat { font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .entry-date { font-size: 11px; color: var(--ink3); }
+  .entry-body { font-size: 14px; line-height: 1.75; color: var(--ink); }
+  .revisit-star { font-size: 11px; color: var(--accent-revisit); background: #FFF8E6; padding: 2px 8px; border-radius: 99px; }
+  .todo-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border2); }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border); flex-shrink: 0; cursor: pointer; margin-top: 2px; background: transparent; transition: all 0.15s; appearance: none; }
+  .todo-check:checked { background: var(--ink); border-color: var(--ink); }
+  .todo-text { flex: 1; font-size: 14px; line-height: 1.6; }
+  .todo-text.done { text-decoration: line-through; color: var(--ink3); }
+  .todo-sub { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+  .priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+  .p-high { background: #C0392B; } .p-medium { background: #E67E22; } .p-low { background: #27AE60; }
+  .todo-del { font-size: 11px; color: var(--ink3); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .todo-del:hover { color: #C0392B; background: #FEF2F2; }
+  .collapsible-head { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 14px 0; border-bottom: 1px solid var(--border2); user-select: none; }
+  .collapsible-title { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .collapsible-count { font-size: 11px; color: var(--ink3); }
+  .collapsible-arrow { font-size: 10px; color: var(--ink3); transition: transform 0.2s; }
+  .collapsible-body { padding: 8px 0 4px; display: none; }
+  .collapsible-body.open { display: block; }
+  .rotated { transform: rotate(90deg); }
+  .empty { text-align: center; padding: 40px 20px; color: var(--ink3); font-size: 13px; }
+  .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.4; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28,25,23,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: var(--bg); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-style: italic; margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .loading-bar { height: 2px; background: var(--accent-spirit); position: fixed; top: 0; left: 0; z-index: 999; transition: width 0.3s; }
+  .menu-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--ink); font-size: 20px; }
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .main { margin-left: 0; }
+    .menu-toggle { display: block; }
+    .overview-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+    .page { padding: 20px; }
+    .topbar { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loading-bar" style="width:0"></div>
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">my space <span>internal growth</span></div>
+    <nav class="nav">
+      <div class="nav-section-label">views</div>
+      <div class="nav-item active" onclick="showPage('overview')"><span class="nav-dot" style="background:var(--ink3)"></span> overview</div>
+      <div class="nav-item" onclick="showPage('log')"><span class="nav-dot" style="background:var(--ink3)"></span> log entry</div>
+      <div class="nav-section-label">categories</div>
+      <div class="nav-item" onclick="showPage('spirituality')"><span class="nav-dot" style="background:var(--accent-spirit)"></span> spirituality</div>
+      <div class="nav-item" onclick="showPage('todos')"><span class="nav-dot" style="background:var(--accent-todo)"></span> to-do tasks</div>
+      <div class="nav-item" onclick="showPage('about')"><span class="nav-dot" style="background:var(--accent-about)"></span> about me</div>
+      <div class="nav-item" onclick="showPage('relationships')"><span class="nav-dot" style="background:var(--accent-rel)"></span> relationships</div>
+      <div class="nav-item" onclick="showPage('tv')"><span class="nav-dot" style="background:var(--accent-tv)"></span> tv & content</div>
+      <div class="nav-item" onclick="showPage('observations')"><span class="nav-dot" style="background:var(--accent-obs)"></span> observations</div>
+      <div class="nav-item" onclick="showPage('revisit')"><span class="nav-dot" style="background:var(--accent-revisit)"></span> worth revisiting</div>
+    </nav>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbar-title">overview</div>
+      </div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+    <div class="page" id="page-content"><div class="empty"><div class="empty-icon">◦</div>loading...</div></div>
+  </div>
+</div>
+
+<!-- ENTRY MODAL -->
+<div class="modal-overlay" id="entry-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">log entry</div>
+    <div class="form-group">
+      <label class="form-label">category</label>
+      <select class="form-select" id="e-category" onchange="updateSubcats()">
+        <option value="spirituality">spirituality</option>
+        <option value="about">about me</option>
+        <option value="relationships">relationships</option>
+        <option value="tv">tv & content</option>
+        <option value="observations">observations</option>
+        <option value="revisit">worth revisiting</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">subcategory</label>
+      <select class="form-select" id="e-subcat"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">entry</label>
+      <textarea class="form-textarea" id="e-body" placeholder="write your thought, reflection, or note..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">date</label>
+        <input type="date" class="form-input" id="e-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">worth revisiting?</label>
+        <select class="form-select" id="e-revisit">
+          <option value="no">no</option>
+          <option value="yes">yes</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">cancel</button>
+      <button class="btn btn-primary" id="save-entry-btn" onclick="saveEntry()">save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- TODO MODAL -->
+<div class="modal-overlay" id="todo-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">add to-do</div>
+    <div class="form-group">
+      <label class="form-label">task</label>
+      <input type="text" class="form-input" id="t-text" placeholder="what needs to be done?">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">type</label>
+        <select class="form-select" id="t-type">
+          <option value="work">work</option>
+          <option value="personal">personal</option>
+          <option value="adulting">adulting / recurring</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">priority</label>
+        <select class="form-select" id="t-priority">
+          <option value="high">high</option>
+          <option value="medium">medium</option>
+          <option value="low">low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">note (optional)</label>
+      <input type="text" class="form-input" id="t-note" placeholder="any context?">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTodoModal()">cancel</button>
+      <button class="btn btn-primary" id="save-todo-btn" onclick="saveTodo()">save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://yanflhgzvutghpazkxlc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_nXSYyFTnk4G11nI0VHjW_w_mEFOPJwi';
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function dbFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...options.headers
+    },
+    ...options
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function getEntries(filter = '') {
+  return dbFetch(`entries?order=created_at.desc${filter ? '&' + filter : ''}`);
+}
+
+async function insertEntry(data) {
+  return dbFetch('entries', { method: 'POST', body: JSON.stringify(data) });
+}
+
+async function updateEntry(id, data) {
+  return dbFetch(`entries?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(data), prefer: 'return=minimal' });
+}
+
+async function deleteEntry(id) {
+  return dbFetch(`entries?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+}
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const SUBCATS = {
+  spirituality: ['favourite videos','interesting concepts','learnings related to my life','remember to keep practicing'],
+  about: ['positive traits','where i usually screw up','traits to be mindful of — spirituality','traits to be mindful of — work','traits to be mindful of — relationships'],
+  relationships: ['family','partner','dating','friends','work','meaningful connections'],
+  tv: ['show notes','linked to me','linked to spirituality','linked to relationships','just interesting'],
+  observations: ['how the world should work','human behaviour','fairness & ethics','general'],
+  revisit: ['practical learnings','emotional learnings','general']
+};
+
+const CAT_COLORS = {
+  spirituality: 'var(--accent-spirit)', about: 'var(--accent-about)',
+  relationships: 'var(--accent-rel)', tv: 'var(--accent-tv)',
+  observations: 'var(--accent-obs)', revisit: 'var(--accent-revisit)'
+};
+
+const CAT_LABELS = {
+  spirituality: 'spirituality', about: 'about me', relationships: 'relationships',
+  tv: 'tv & content', observations: 'observations', revisit: 'worth revisiting'
+};
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
+let currentPage = 'overview';
+
+function loading(pct) {
+  const bar = document.getElementById('loading-bar');
+  bar.style.width = pct + '%';
+  if (pct >= 100) setTimeout(() => bar.style.width = '0', 400);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function showPage(name) {
+  currentPage = name;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${name}'`));
+  });
+  const titles = { overview:'overview', log:'log entry', spirituality:'spirituality', todos:'to-do tasks', about:'about me', relationships:'relationships', tv:'tv & content', observations:'observations', revisit:'worth revisiting' };
+  document.getElementById('topbar-title').textContent = titles[name] || name;
+  document.getElementById('page-content').innerHTML = '<div class="empty"><div class="empty-icon">◦</div>loading...</div>';
+  closeSidebar();
+  const pages = { overview: renderOverview, log: renderLog, todos: renderTodos, spirituality: () => renderCategory('spirituality'), about: () => renderCategory('about'), relationships: () => renderCategory('relationships'), tv: () => renderCategory('tv'), observations: () => renderCategory('observations'), revisit: renderRevisit };
+  (pages[name] || renderOverview)();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ── PAGES ─────────────────────────────────────────────────────────────────────
+async function renderOverview() {
+  loading(30);
+  const all = await getEntries();
+  loading(80);
+  const todos = all.filter(e => e.type && e.type !== '');
+  const entries = all.filter(e => !e.type || e.type === '');
+  const openTodos = todos.filter(t => t.revisit !== 'done');
+  const revisit = entries.filter(e => e.revisit === 'yes');
+  const recent = entries.slice(0, 5);
+  loading(100);
+
+  document.getElementById('page-content').innerHTML = `
+    <div class="overview-grid">
+      <div class="metric-card"><div class="metric-label">total entries</div><div class="metric-val">${entries.length}</div></div>
+      <div class="metric-card"><div class="metric-label">open to-dos</div><div class="metric-val">${openTodos.length}</div></div>
+      <div class="metric-card"><div class="metric-label">worth revisiting</div><div class="metric-val">${revisit.length}</div></div>
+    </div>
+    <div class="section-head"><div class="section-title">recent entries</div><button class="btn btn-ghost btn-sm" onclick="openEntryModal()">+ add entry</button></div>
+    <div class="card">
+      ${recent.length === 0 ? `<div class="empty"><div class="empty-icon">◦</div>nothing logged yet.</div>` : recent.map(e => entryHtml(e)).join('')}
+    </div>
+    ${openTodos.length > 0 ? `<div class="section-head" style="margin-top:24px"><div class="section-title">open to-dos</div></div><div class="card">${openTodos.slice(0,5).map(t => todoHtml(t)).join('')}</div>` : ''}
+  `;
+}
+
+async function renderLog() {
+  loading(30);
+  const all = await getEntries();
+  loading(80);
+  const entries = all.filter(e => !e.type || e.type === '');
+  loading(100);
+  document.getElementById('page-content').innerHTML = `
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:24px;line-height:1.7">use this to log entries manually. talk to Claude first to process a reflection, then paste the distilled version here. Claude can also push entries directly — just say "add to dashboard" in your chat.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px 20px" onclick="openEntryModal()">
+        <div style="font-size:24px;margin-bottom:8px;opacity:0.5">✦</div>
+        <div style="font-size:14px;font-weight:500">log entry</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:4px">reflection, insight, note</div>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center;padding:28px 20px" onclick="openTodoModal()">
+        <div style="font-size:24px;margin-bottom:8px;opacity:0.5">◻</div>
+        <div style="font-size:14px;font-weight:500">add to-do</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:4px">task, reminder, action item</div>
+      </div>
+    </div>
+    <div class="section-head"><div class="section-title">all entries</div></div>
+    <div class="card">
+      ${entries.length === 0 ? `<div class="empty"><div class="empty-icon">◦</div>no entries yet.</div>` : entries.map(e => entryHtml(e, true)).join('')}
+    </div>
+  `;
+}
+
+async function renderCategory(cat) {
+  loading(30);
+  const all = await getEntries(`category=eq.${cat}`);
+  loading(80);
+  const subs = SUBCATS[cat] || [];
+  const color = CAT_COLORS[cat];
+  loading(100);
+  document.getElementById('page-content').innerHTML = `
+    <div class="section-head">
+      <div class="section-title">${CAT_LABELS[cat]}</div>
+      <button class="btn btn-ghost btn-sm" onclick="openEntryModal('${cat}')">+ add entry</button>
+    </div>
+    <div class="card">
+      ${subs.map(sub => {
+        const subEntries = all.filter(e => e.subcat === sub);
+        return `
+          <div class="collapsible-head" onclick="toggleCollapsible(this)">
+            <div class="collapsible-title"><span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block"></span>${sub}</div>
+            <div style="display:flex;align-items:center;gap:8px"><span class="collapsible-count">${subEntries.length}</span><span class="collapsible-arrow">▶</span></div>
+          </div>
+          <div class="collapsible-body">
+            ${subEntries.length === 0 ? `<div style="padding:12px 0;font-size:13px;color:var(--ink3)">nothing here yet.</div>` : subEntries.map(e => entryHtml(e, true)).join('')}
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function renderTodos() {
+  loading(30);
+  const all = await getEntries(`type=not.is.null`);
+  loading(80);
+  const types = ['work','personal','adulting'];
+  const typeLabels = { work:'work (next 3 days)', personal:'personal (next 3 days)', adulting:'adulting / recurring' };
+  loading(100);
+  document.getElementById('page-content').innerHTML = `
+    <div class="section-head"><div class="section-title">to-do tasks</div><button class="btn btn-ghost btn-sm" onclick="openTodoModal()">+ add task</button></div>
+    ${types.map(type => {
+      const items = all.filter(t => t.type === type);
+      return `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--accent-todo)">
+        <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent-todo);font-weight:500;margin-bottom:12px">${typeLabels[type]}</div>
+        ${items.length === 0 ? `<div style="font-size:13px;color:var(--ink3);padding:8px 0">nothing here.</div>` : items.map(t => todoHtml(t)).join('')}
+      </div>`;
+    }).join('')}
+  `;
+}
+
+async function renderRevisit() {
+  loading(30);
+  const all = await getEntries(`revisit=eq.yes`);
+  loading(100);
+  document.getElementById('page-content').innerHTML = `
+    <div class="section-head"><div class="section-title">worth revisiting</div></div>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.7">insights and lessons marked across all categories.</p>
+    <div class="card">
+      ${all.length === 0 ? `<div class="empty"><div class="empty-icon">◦</div>mark entries as "worth revisiting" and they'll appear here.</div>` : all.map(e => entryHtml(e, true)).join('')}
+    </div>
+  `;
+}
+
+// ── HTML HELPERS ──────────────────────────────────────────────────────────────
+function entryHtml(e, showDelete = false) {
+  const color = CAT_COLORS[e.category] || 'var(--ink3)';
+  return `<div class="entry">
+    <div class="entry-meta">
+      <span class="entry-cat" style="color:${color}">${CAT_LABELS[e.category] || e.category || ''}</span>
+      ${e.subcat ? `<span style="font-size:10px;color:var(--ink3)">· ${e.subcat}</span>` : ''}
+      ${e.revisit === 'yes' ? `<span class="revisit-star">★ revisit</span>` : ''}
+      <span class="entry-date">${e.date || ''}</span>
+    </div>
+    <div class="entry-body">${e.body || ''}</div>
+    ${showDelete ? `<div style="margin-top:8px"><span style="font-size:11px;color:var(--ink3);cursor:pointer" onclick="confirmDelete('${e.id}')">delete</span></div>` : ''}
+  </div>`;
+}
+
+function todoHtml(t) {
+  const done = t.revisit === 'done';
+  return `<div class="todo-item">
+    <span class="priority-dot p-${t.priority || 'low'}"></span>
+    <input type="checkbox" class="todo-check" ${done ? 'checked' : ''} onchange="toggleTodo('${t.id}', ${done})">
+    <div style="flex:1">
+      <div class="todo-text ${done ? 'done' : ''}">${t.body || ''}</div>
+      ${t.note ? `<div class="todo-sub">${t.note}</div>` : ''}
+    </div>
+    <span class="todo-del" onclick="confirmDelete('${t.id}')">✕</span>
+  </div>`;
+}
+
+function toggleCollapsible(head) {
+  const body = head.nextElementSibling;
+  const arrow = head.querySelector('.collapsible-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('rotated');
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+async function confirmDelete(id) {
+  if (!confirm('delete this?')) return;
+  await deleteEntry(id);
+  toast('deleted');
+  showPage(currentPage);
+}
+
+async function toggleTodo(id, wasDone) {
+  await updateEntry(id, { revisit: wasDone ? 'no' : 'done' });
+  showPage(currentPage);
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openEntryModal(cat) {
+  updateSubcats();
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  if (cat) document.getElementById('e-category').value = cat;
+  updateSubcats();
+  document.getElementById('e-body').value = '';
+  document.getElementById('e-revisit').value = 'no';
+  document.getElementById('entry-modal').style.display = 'flex';
+}
+function closeModal() { document.getElementById('entry-modal').style.display = 'none'; }
+function openTodoModal() {
+  document.getElementById('t-text').value = '';
+  document.getElementById('t-note').value = '';
+  document.getElementById('todo-modal').style.display = 'flex';
+}
+function closeTodoModal() { document.getElementById('todo-modal').style.display = 'none'; }
+
+function updateSubcats() {
+  const cat = document.getElementById('e-category').value;
+  const sel = document.getElementById('e-subcat');
+  sel.innerHTML = (SUBCATS[cat] || []).map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+async function saveEntry() {
+  const body = document.getElementById('e-body').value.trim();
+  if (!body) return;
+  const btn = document.getElementById('save-entry-btn');
+  btn.disabled = true; btn.textContent = 'saving...';
+  try {
+    await insertEntry({
+      category: document.getElementById('e-category').value,
+      subcat: document.getElementById('e-subcat').value,
+      body, date: document.getElementById('e-date').value,
+      revisit: document.getElementById('e-revisit').value
+    });
+    closeModal(); toast('entry saved');
+    showPage(currentPage);
+  } catch(e) { toast('error saving — try again'); }
+  btn.disabled = false; btn.textContent = 'save entry';
+}
+
+async function saveTodo() {
+  const text = document.getElementById('t-text').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('save-todo-btn');
+  btn.disabled = true; btn.textContent = 'saving...';
+  try {
+    await insertEntry({
+      body: text, type: document.getElementById('t-type').value,
+      priority: document.getElementById('t-priority').value,
+      note: document.getElementById('t-note').value.trim(),
+      date: new Date().toISOString().split('T')[0], revisit: 'no'
+    });
+    closeTodoModal(); toast('to-do saved');
+    showPage(currentPage);
+  } catch(e) { toast('error saving — try again'); }
+  btn.disabled = false; btn.textContent = 'save';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+updateSubcats();
+showPage('overview');
+</script>
+</body>
+</html>
