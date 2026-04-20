@@ -89,6 +89,14 @@
   .loading-bar { height: 2px; background: var(--accent-spirit); position: fixed; top: 0; left: 0; z-index: 999; transition: width 0.3s; }
   .menu-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--ink); font-size: 20px; }
   .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; }
+  /* import page */
+  .import-entry { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 10px; }
+  .import-entry-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .import-entry-title { font-size: 14px; font-weight: 500; line-height: 1.5; }
+  .import-entry-body { font-size: 13px; color: var(--ink2); line-height: 1.7; white-space: pre-wrap; }
+  .import-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .import-tag { font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; }
+  .import-status { font-size: 12px; margin-top: 8px; }
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
@@ -114,6 +122,7 @@
       <div class="nav-section-label">views</div>
       <div class="nav-item active" onclick="showPage('overview')"><span class="nav-dot" style="background:var(--ink3)"></span> overview</div>
       <div class="nav-item" onclick="showPage('log')"><span class="nav-dot" style="background:var(--ink3)"></span> log entry</div>
+      <div class="nav-item" onclick="showPage('import')"><span class="nav-dot" style="background:#C084FC"></span> import from chat</div>
       <div class="nav-section-label">categories</div>
       <div class="nav-item" onclick="showPage('spirituality')"><span class="nav-dot" style="background:var(--accent-spirit)"></span> spirituality</div>
       <div class="nav-item" onclick="showPage('todos')"><span class="nav-dot" style="background:var(--accent-todo)"></span> to-do tasks</div>
@@ -241,15 +250,12 @@ async function dbFetch(path, options = {}) {
 async function getEntries(filter = '') {
   return dbFetch(`entries?order=created_at.desc${filter ? '&' + filter : ''}`);
 }
-
 async function insertEntry(data) {
   return dbFetch('entries', { method: 'POST', body: JSON.stringify(data) });
 }
-
 async function updateEntry(id, data) {
   return dbFetch(`entries?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(data), prefer: 'return=minimal' });
 }
-
 async function deleteEntry(id) {
   return dbFetch(`entries?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
 }
@@ -275,6 +281,120 @@ const CAT_LABELS = {
   tv: 'tv & content', observations: 'observations', revisit: 'worth revisiting'
 };
 
+// Map display category names → dashboard category keys
+const CAT_KEY_MAP = {
+  'Spirituality': 'spirituality',
+  'About Me': 'about',
+  'Observations/Philosophy': 'observations',
+  'Worth Revisiting': 'revisit',
+  'Relationships': 'relationships',
+  'TV & Content': 'tv'
+};
+
+// ── IMPORT DATA ───────────────────────────────────────────────────────────────
+const IMPORT_ENTRIES = [
+  {
+    id: 'imp_1',
+    title: 'Why believe Vedanta? Stronger counters',
+    categories: ['Spirituality', 'Observations/Philosophy'],
+    primaryCat: 'spirituality',
+    subcat: 'interesting concepts',
+    revisit: 'yes',
+    date: '2025-04-18',
+    body: `Three stronger counters to "why believe Vedanta":
+
+1. Cross-tradition convergence — Advaita, Zen, Sufism, Christian mysticism independently describe post-practice states similarly. Independent convergence is weak but real evidence.
+
+2. The method invites skepticism — shruti-manana-nididhyasana means hear, reason, then verify experientially. The proof is in the practice.
+
+3. The neuroscientist's "no-I" claim is also unverified — inferring no-subject from third-person data is its own leap.
+
+The honest answer: don't believe them yet. Practice, reason, see what it produces. That's actually the Advaita position.`
+  },
+  {
+    id: 'imp_2',
+    title: 'Mosquito moment — the witness becoming available',
+    categories: ['Spirituality', 'About Me'],
+    primaryCat: 'spirituality',
+    subcat: 'learnings related to my life',
+    revisit: 'yes',
+    date: '2025-04-18',
+    body: `Caught myself mid-action slapping at what turned out not to be a mosquito. In that half-second gap between impulse and action, noticed the witness. The gap between stimulus and response is where awareness lives.
+
+Not a meditation cushion thing — it shows up in small instinctive moments first. The fact I caught it mid-action (even too late) means the witness is becoming more available. That's the practice working, not failure.`
+  },
+  {
+    id: 'imp_3',
+    title: 'Ramana & Shankara — two pillars, opposite directions',
+    categories: ['Spirituality', 'Worth Revisiting'],
+    primaryCat: 'spirituality',
+    subcat: 'interesting concepts',
+    revisit: 'yes',
+    date: '2025-04-18',
+    body: `Ramana Maharshi: born 1879, spontaneous death-experience at 16, arrived at pure Advaita through direct experience, then recognised it matched Shankara's framework after the fact. Method: self-inquiry — "Who am I?" — trace every thought back to its source.
+
+Shankara: arrived through scriptural mastery and rigorous logic (top-down). Wrote extensively.
+
+Both point to the same destination — one intellectual, one experiential. The two strongest pillars of Advaita, from opposite directions.`
+  },
+  {
+    id: 'imp_4',
+    title: 'Lokasangraha — the second filter for acting cleanly',
+    categories: ['Observations/Philosophy', 'Spirituality'],
+    primaryCat: 'observations',
+    subcat: 'fairness & ethics',
+    revisit: 'yes',
+    date: '2025-04-19',
+    body: `Karma yoga's definition of "cleanly" is specific, not subjective: action done without personal attachment to results, without ego-driven motivation, aligned with dharma.
+
+But the Gita adds a second filter — lokasangraha: actions must hold the world together, not unravel it (Ch. 3). An action can be ego-free and still be adharmic if it depletes rather than sustains.
+
+Discomfort with someone's ethically neutral but world-depleting work isn't just preference — it has philosophical grounding.`
+  },
+  {
+    id: 'imp_5',
+    title: 'Vasanas questions — sit with these sober',
+    categories: ['About Me', 'Worth Revisiting'],
+    primaryCat: 'about',
+    subcat: 'traits to be mindful of — spirituality',
+    revisit: 'yes',
+    date: '2025-04-18',
+    body: `Questions to identify samskaras/vasanas — your natural disposition toward bhakti/karma/jnana/raja path:
+
+1. When have you felt most like yourself — not happy, but most yourself?
+2. What have you done where time disappeared?
+3. What do you find yourself unable to stop thinking about, even when inconvenient?
+4. What role do strangers naturally cast you in — what do they confide?
+5. What have you been told you're good at that you take completely for granted?
+6. What injustice makes you viscerally angry, not just intellectually bothered?
+7. At 70, feeling complete — what did you spend it doing or being?
+
+Sit with these sober, then map against path dispositions.`
+  },
+  {
+    id: 'imp_6',
+    title: 'Karma yoga for blocked work — how to use the lab',
+    categories: ['About Me', 'Observations/Philosophy'],
+    primaryCat: 'about',
+    subcat: 'traits to be mindful of — work',
+    revisit: 'no',
+    date: '2025-04-19',
+    body: `Karma yoga doesn't tell you what to do. It makes the not-knowing more bearable and the exploration cleaner.
+
+Practically: each exploration attempt (application, conversation, research) is the action. The lab is how you show up to uncertainty — attached to the outcome, or clean release?
+
+Notice what pulls attention without effort — not "what do I love" (too pressured) but what do you read/think about when no one's watching. Log it without judgment.
+
+Short experiments over long commitments — 2-4 week genuine immersions, not "is this my life's work."
+
+The answer to the big question is downstream from accumulated clean actions, not from any single one.`
+  }
+];
+
+// ── IMPORT STATE ──────────────────────────────────────────────────────────────
+const importState = {};
+IMPORT_ENTRIES.forEach(e => { importState[e.id] = 'pending'; });
+
 // ── UI HELPERS ────────────────────────────────────────────────────────────────
 let currentPage = 'overview';
 
@@ -296,11 +416,11 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${name}'`));
   });
-  const titles = { overview:'overview', log:'log entry', spirituality:'spirituality', todos:'to-do tasks', about:'about me', relationships:'relationships', tv:'tv & content', observations:'observations', revisit:'worth revisiting' };
+  const titles = { overview:'overview', log:'log entry', import:'import from chat', spirituality:'spirituality', todos:'to-do tasks', about:'about me', relationships:'relationships', tv:'tv & content', observations:'observations', revisit:'worth revisiting' };
   document.getElementById('topbar-title').textContent = titles[name] || name;
   document.getElementById('page-content').innerHTML = '<div class="empty"><div class="empty-icon">◦</div>loading...</div>';
   closeSidebar();
-  const pages = { overview: renderOverview, log: renderLog, todos: renderTodos, spirituality: () => renderCategory('spirituality'), about: () => renderCategory('about'), relationships: () => renderCategory('relationships'), tv: () => renderCategory('tv'), observations: () => renderCategory('observations'), revisit: renderRevisit };
+  const pages = { overview: renderOverview, log: renderLog, import: renderImport, todos: renderTodos, spirituality: () => renderCategory('spirituality'), about: () => renderCategory('about'), relationships: () => renderCategory('relationships'), tv: () => renderCategory('tv'), observations: () => renderCategory('observations'), revisit: renderRevisit };
   (pages[name] || renderOverview)();
 }
 
@@ -346,7 +466,7 @@ async function renderLog() {
   const entries = all.filter(e => !e.type || e.type === '');
   loading(100);
   document.getElementById('page-content').innerHTML = `
-    <p style="font-size:14px;color:var(--ink2);margin-bottom:24px;line-height:1.7">use this to log entries manually. talk to Claude first to process a reflection, then paste the distilled version here. Claude can also push entries directly — just say "add to dashboard" in your chat.</p>
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:24px;line-height:1.7">use this to log entries manually. talk to Claude first to process a reflection, then paste the distilled version here.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
       <div class="card" style="cursor:pointer;text-align:center;padding:28px 20px" onclick="openEntryModal()">
         <div style="font-size:24px;margin-bottom:8px;opacity:0.5">✦</div>
@@ -364,6 +484,94 @@ async function renderLog() {
       ${entries.length === 0 ? `<div class="empty"><div class="empty-icon">◦</div>no entries yet.</div>` : entries.map(e => entryHtml(e, true)).join('')}
     </div>
   `;
+}
+
+function renderImport() {
+  const pendingCount = IMPORT_ENTRIES.filter(e => importState[e.id] === 'pending').length;
+  const doneCount = IMPORT_ENTRIES.filter(e => importState[e.id] === 'saved').length;
+
+  document.getElementById('page-content').innerHTML = `
+    <p style="font-size:14px;color:var(--ink2);margin-bottom:8px;line-height:1.7">6 entries from your Advaita Vedanta conversation, ready to save. Each is pre-assigned to a category — you can save individually or all at once.</p>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:24px">${doneCount} of ${IMPORT_ENTRIES.length} saved</p>
+
+    ${pendingCount > 0 ? `<div style="margin-bottom:20px"><button class="btn btn-primary" id="import-all-btn" onclick="saveAllImports()">save all remaining (${pendingCount})</button></div>` : `<div style="margin-bottom:20px;font-size:13px;color:var(--accent-spirit)">✓ all entries saved</div>`}
+
+    <div id="import-list">
+      ${IMPORT_ENTRIES.map(e => importEntryHtml(e)).join('')}
+    </div>
+  `;
+}
+
+function importEntryHtml(e) {
+  const state = importState[e.id];
+  const catColor = CAT_COLORS[e.primaryCat] || 'var(--ink3)';
+  const tagColors = {
+    'Spirituality': '#2D6A4F', 'About Me': '#5B3A8A',
+    'Observations/Philosophy': '#5B6B3A', 'Worth Revisiting': '#8A5B00',
+    'Relationships': '#8A3A5B'
+  };
+
+  return `<div class="import-entry" id="card_${e.id}" style="${state === 'saved' ? 'opacity:0.5' : ''}">
+    <div class="import-entry-header">
+      <div class="import-entry-title">${e.title}</div>
+      ${state === 'pending'
+        ? `<button class="btn btn-ghost btn-sm" onclick="saveSingleImport('${e.id}')" style="flex-shrink:0">save</button>`
+        : `<span style="font-size:12px;color:var(--accent-spirit);flex-shrink:0">✓ saved</span>`
+      }
+    </div>
+    <div class="import-tags">
+      ${e.categories.map(c => `<span class="import-tag" style="background:${tagColors[c] || '#888'}18;color:${tagColors[c] || '#888'}">${c}</span>`).join('')}
+      <span class="import-tag" style="background:var(--bg2);color:var(--ink3)">${e.subcat}</span>
+      ${e.revisit === 'yes' ? `<span class="import-tag" style="background:#FFF8E6;color:var(--accent-revisit)">★ revisit</span>` : ''}
+    </div>
+    <div class="import-entry-body">${e.body}</div>
+  </div>`;
+}
+
+async function saveSingleImport(id) {
+  const e = IMPORT_ENTRIES.find(x => x.id === id);
+  if (!e) return;
+  const btn = document.querySelector(`#card_${id} button`);
+  if (btn) { btn.disabled = true; btn.textContent = 'saving...'; }
+  try {
+    await insertEntry({
+      category: e.primaryCat,
+      subcat: e.subcat,
+      body: e.body,
+      date: e.date,
+      revisit: e.revisit
+    });
+    importState[id] = 'saved';
+    toast('entry saved');
+    renderImport();
+  } catch(err) {
+    toast('error — try again');
+    if (btn) { btn.disabled = false; btn.textContent = 'save'; }
+  }
+}
+
+async function saveAllImports() {
+  const btn = document.getElementById('import-all-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'saving...'; }
+  const pending = IMPORT_ENTRIES.filter(e => importState[e.id] === 'pending');
+  let saved = 0;
+  for (const e of pending) {
+    try {
+      await insertEntry({
+        category: e.primaryCat,
+        subcat: e.subcat,
+        body: e.body,
+        date: e.date,
+        revisit: e.revisit
+      });
+      importState[e.id] = 'saved';
+      saved++;
+    } catch(err) {
+      console.error('failed to save', e.id, err);
+    }
+  }
+  toast(`${saved} entries saved`);
+  renderImport();
 }
 
 async function renderCategory(cat) {
