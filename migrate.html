@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>migrate entries</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#F7F4EF;--bg2:#EFEBE3;--bg3:#E8E2D9;--ink:#1C1917;--ink2:#57534E;--ink3:#A8A29E;--accent:#2D6A4F;--border:rgba(28,25,23,0.1);--border2:rgba(28,25,23,0.06);--radius:12px;--radius-sm:8px; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-weight:300;padding:40px 32px;max-width:860px;margin:0 auto;}
+  h1{font-family:'DM Serif Display',serif;font-size:26px;font-style:italic;margin-bottom:8px;}
+  .sub{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:32px;}
+  .btn{padding:10px 24px;font-size:13px;font-weight:500;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;border:1px solid var(--border);}
+  .btn-primary{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .btn-primary:hover{background:var(--ink2);}
+  .btn:disabled{opacity:0.4;cursor:default;}
+  .controls{display:flex;align-items:center;gap:12px;margin-bottom:32px;flex-wrap:wrap;}
+  .status-line{font-size:13px;color:var(--ink3);}
+  .progress{height:2px;background:var(--bg3);border-radius:2px;margin-bottom:32px;overflow:hidden;display:none;}
+  .progress-bar{height:100%;background:var(--accent);transition:width 0.4s;}
+  .entry-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;}
+  .entry-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px;}
+  .entry-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .entry-cat{font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink3);}
+  .entry-preview{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:16px;padding:12px;background:var(--bg2);border-radius:var(--radius-sm);max-height:72px;overflow:hidden;}
+  .field-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);font-weight:500;margin-bottom:6px;display:block;}
+  .field-input{width:100%;padding:10px 14px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-weight:300;outline:none;transition:border 0.15s;resize:none;min-height:56px;line-height:1.6;}
+  .field-input:focus{border-color:var(--ink2);}
+  .field-group{margin-bottom:12px;}
+  .badge{font-size:10px;font-weight:500;padding:2px 10px;border-radius:99px;}
+  .badge-ready{background:#E8F5EE;color:#2D6A4F;}
+  .badge-saved{background:#E8F5EE;color:#2D6A4F;opacity:0.5;}
+  .badge-error{background:#FEF2F2;color:#C0392B;}
+  .badge-skip{background:var(--bg2);color:var(--ink3);}
+  .section-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin:28px 0 12px;font-weight:500;}
+</style>
+</head>
+<body>
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;"></div>
+<h1>entry migration</h1>
+<p class="sub">11 unique entries pre-loaded with generated <strong>core message</strong> and <strong>takeaway</strong>. Edit anything that feels off, then save to Supabase. 7 duplicates and test entries are skipped automatically.</p>
+<div class="controls">
+  <button class="btn btn-primary" onclick="saveAll()" id="save-btn">save all to dashboard</button>
+  <span class="status-line" id="status-line">ready — review and save</span>
+</div>
+<div class="progress" id="progress"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+<div id="entries-container"></div>
+<script>
+const SB='https://yanflhgzvutghpazkxlc.supabase.co';
+const KEY='sb_publishable_nXSYyFTnk4G11nI0VHjW_w_mEFOPJwi';
+const CAT={spirituality:'spirituality',about:'about me',relationships:'relationships',tv:'tv & content',observations:'observations',revisit:'worth revisiting'};
+const M=[
+  {id:'04246ed2-6c97-4f47-a978-43161c4a61c4',category:'spirituality',subcat:'interesting concepts',date:'2025-04-18',preview:'Three stronger counters to "why believe Vedanta": cross-tradition convergence, empirical method, epistemological parity.',core_message:'Vedanta earns trust through independent cross-tradition convergence, an empirical method, and epistemological parity with its critics.',takeaway:'You don\'t need to believe first — practice, reason, and observe what it produces in you.'},
+  {id:'e3e318a5-d10b-4080-a737-3f1b5f4fa23a',category:'spirituality',subcat:'interesting concepts',date:'2025-04-18',preview:'Ramana and Shankara — both pillars of Advaita, arriving from opposite directions.',core_message:'Ramana arrived at Advaita through raw experience; Shankara through scripture — same destination, opposite paths.',takeaway:'You\'re drawn to experience over doctrine, which makes Ramana\'s self-inquiry method your most natural entry point.'},
+  {id:'11c2902d-6638-41cf-a771-62e71f0a6a68',category:'observations',subcat:'fairness & ethics',date:'2026-04-20',preview:'When a line resets, people who were first should carry priority forward — most don\'t.',core_message:'How someone behaves in small, unenforced social moments reveals their actual character more than big gestures.',takeaway:'You notice these moments acutely — trust that instinct; it\'s calibrated well.'},
+  {id:'28e90b4e-2ae3-4f12-aea6-89bbdd27ad5f',category:'spirituality',subcat:'learnings related to my life',date:'2026-04-20',preview:'Reflection on Advaita Vedanta, karma yoga, and the lokasangraha filter for clean action.',core_message:'Clean action in karma yoga requires both non-attachment and dharmic alignment — discomfort with profit-driven work is philosophically grounded.',takeaway:'Your father\'s transformation is real evidence the practice works; you\'re seeing the fruits, not just the theory.'},
+  {id:'3e9aea28-b6a9-41a0-a695-b0d79f351a13',category:'about',subcat:'traits to be mindful of — spirituality',date:'2025-04-18',preview:'Seven questions to identify your natural path disposition — bhakti, karma, jnana, or raja.',core_message:'Your accumulated tendencies across lives show up as vasanas — these seven questions map your natural spiritual path.',takeaway:'Sit with these when clear-headed; the answers will likely point you toward jnana or karma yoga over bhakti.'},
+  {id:'e4c59906-1ffa-455f-b621-de85e20ae0ae',category:'observations',subcat:'fairness & ethics',date:'2025-04-19',preview:'Karma yoga\'s definition of clean action and the lokasangraha filter from the Gita.',core_message:'An action can be ego-free and still adharmic if it depletes rather than sustains the world.',takeaway:'Your discomfort with world-depleting work isn\'t just preference — it\'s a legitimate philosophical position with scriptural grounding.'},
+  {id:'5097ba50-1587-44c0-89d9-b11531862f94',category:'spirituality',subcat:'learnings related to my life',date:'2025-04-18',preview:'Caught mid-action slapping at a non-existent mosquito — noticed the witness in that half-second gap.',core_message:'The half-second gap between impulse and action is where awareness lives — catching it even mid-action means the witness is becoming available.',takeaway:'The practice is working — you\'re not failing by catching it late, you\'re succeeding by catching it at all.'},
+  {id:'b587536c-6931-458c-a376-f7fc2bdba463',category:'about',subcat:'traits to be mindful of — work',date:'2025-04-19',preview:'Karma yoga for blocked work — how to treat career exploration as the lab.',core_message:'Karma yoga doesn\'t resolve what to do — it makes the not-knowing bearable by shifting focus from outcome to quality of action.',takeaway:'Run 2–4 week genuine immersions into industries; the answer emerges downstream from clean attempts, not from any single one.'},
+  {id:'8c99b345-2d25-4bff-aad0-adf26cd9e5e2',category:'spirituality',subcat:'learnings related to my life',date:'2026-04-03',preview:'Solitude isn\'t just preference — it\'s where he accesses himself.',core_message:'Solitude is not antisocial — it\'s the primary space where you access your own self, and that\'s worth protecting.',takeaway:'The question isn\'t whether a partner disrupts your solitude, but whether you can build a relationship that honours it.'},
+  {id:'d16d0c7e-9240-40e3-ae1b-3157d06ae008',category:'about',subcat:'traits to be mindful of',date:'2026-04-03',preview:'Cherishes solitary wandering — anxiety around being witnessed in intimate, unstructured moments.',core_message:'The belief "I don\'t deserve someone" sits beneath anxiety about being witnessed — worth examining, not just managing.',takeaway:'The wandering isn\'t the issue; it\'s worth sitting with what feeling observed or known actually triggers in you.'},
+  {id:'d4d5099e-3331-47fb-9025-e9ba281e14f6',category:'relationships',subcat:'partner',date:'2026-04-03',preview:'Worried about losing private self-space in a relationship.',core_message:'The fear of losing yourself in a relationship may be less about a partner\'s presence and more about whether you\'d still feel like yourself.',takeaway:'You need a relationship model that builds in genuine solitude — not as compromise, but as a design principle.'}
+];
+const SKIP=[
+  {id:'53d1dc55-6dd4-474a-84ab-91a6a28b9f13',reason:'duplicate of mosquito moment'},
+  {id:'997ec791-f553-4442-b6dc-43cb32b123d5',reason:'duplicate of Vedanta counters'},
+  {id:'09fa14c6-0232-49fd-9e7d-4403640e0a3c',reason:'duplicate of Ramana/Shankara'},
+  {id:'6c1cf770-79f0-43b1-83e4-ca68f3f4da9c',reason:'duplicate of vasanas questions'},
+  {id:'413afc84-4c09-4055-87fd-aad18eb1c319',reason:'duplicate of lokasangraha'},
+  {id:'fac27661-4e8b-4a2f-90d4-1037fc928b36',reason:'duplicate of karma yoga work'},
+  {id:'8123e0ba-44d9-447e-9e92-a0ac8fabfbd9',reason:'test entry'}
+];
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity=1;setTimeout(()=>el.style.opacity=0,2500);}
+function setStatus(m){document.getElementById('status-line').textContent=m;}
+function setProgress(p){document.getElementById('progress').style.display='block';document.getElementById('progress-bar').style.width=p+'%';}
+
+async function sbPatch(id,data){
+  const r=await fetch(`${SB}/rest/v1/entries?id=eq.${id}`,{method:'PATCH',headers:{'apikey':KEY,'Authorization':`Bearer ${KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error(await r.text());
+}
+
+function render(){
+  const c=document.getElementById('entries-container');
+  const sl=document.createElement('div');sl.className='section-label';sl.textContent='11 unique entries to migrate';c.appendChild(sl);
+  M.forEach(e=>{
+    const d=document.createElement('div');d.className='entry-card';d.id='card_'+e.id;
+    d.innerHTML=`<div class="entry-header"><div class="entry-meta"><span class="entry-cat">${CAT[e.category]||e.category}</span><span style="font-size:10px;color:var(--ink3)">· ${e.subcat}</span><span style="font-size:10px;color:var(--ink3)">${e.date}</span></div><span class="badge badge-ready" id="badge_${e.id}">ready</span></div><div class="entry-preview">${e.preview}</div><div class="field-group"><label class="field-label">core message</label><textarea class="field-input" id="cm_${e.id}">${e.core_message}</textarea></div><div class="field-group"><label class="field-label">takeaway for you</label><textarea class="field-input" id="tk_${e.id}">${e.takeaway}</textarea></div>`;
+    c.appendChild(d);
+  });
+  const sl2=document.createElement('div');sl2.className='section-label';sl2.textContent='7 entries being skipped';c.appendChild(sl2);
+  SKIP.forEach(s=>{
+    const d=document.createElement('div');d.className='entry-card';d.style.opacity='0.4';
+    d.innerHTML=`<div class="entry-header"><span style="font-size:13px;color:var(--ink3)">${s.id.slice(0,8)}...</span><span class="badge badge-skip">${s.reason}</span></div>`;
+    c.appendChild(d);
+  });
+}
+
+async function saveAll(){
+  const btn=document.getElementById('save-btn');btn.disabled=true;setStatus('saving...');setProgress(0);
+  let saved=0;
+  for(let i=0;i<M.length;i++){
+    const e=M[i];
+    const cm=document.getElementById('cm_'+e.id)?.value.trim();
+    const tk=document.getElementById('tk_'+e.id)?.value.trim();
+    if(!cm||!tk)continue;
+    try{
+      await sbPatch(e.id,{core_message:cm,takeaway:tk});
+      document.getElementById('badge_'+e.id).className='badge badge-saved';
+      document.getElementById('badge_'+e.id).textContent='saved';
+      saved++;
+    }catch(err){
+      document.getElementById('badge_'+e.id).className='badge badge-error';
+      document.getElementById('badge_'+e.id).textContent='error';
+    }
+    setProgress(((i+1)/M.length)*100);
+    await new Promise(r=>setTimeout(r,150));
+  }
+  setStatus(`${saved} of ${M.length} entries saved`);
+  toast(`${saved} entries updated`);
+  btn.disabled=false;btn.textContent='done';
+}
+render();
+</script>
+</body>
+</html>
